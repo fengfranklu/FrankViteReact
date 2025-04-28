@@ -6,7 +6,7 @@ npm comes with node
 
 if version not enough, download the LTS msi file and do the installation
 
-
+## Create Vite React
 
 from Vite home page, --> Guide --> Getting Started --> 
 
@@ -94,9 +94,11 @@ React uses "declarative programming" as opposed to our normal "imperative progra
 
 
 
-Install and config tailwindcss
+## Install and config tailwindcss
 
 **go to tailwindcss website, Getting Started, Installation, following the instructions from vite tab.**
+
+`npm install tailwindcss @tailwindcss/vite`
 
 
 
