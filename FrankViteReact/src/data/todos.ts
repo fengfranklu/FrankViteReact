@@ -14,6 +14,6 @@ export const dumyData : Todo[] = [
   {
     id: 3,
     title: "Todo 3",
-    completed: true
+    completed: false
   }
 ]
