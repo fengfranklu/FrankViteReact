@@ -11,7 +11,7 @@ function App() {
             <div key={todo.id} className="text-lg py-2">
               <p>{todo.title}</p>
               <p>{todo.completed ? 'Completed' : 'Not Completed'}</p>
-              <TodoItem />  
+              <TodoItem todo={todo} />
             </div>
           ))}
         </div>
