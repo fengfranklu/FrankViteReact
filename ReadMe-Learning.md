@@ -109,3 +109,19 @@ React uses "declarative programming" as opposed to our normal "imperative progra
 
 
 Delete "App.css"   you no longer need
+
+## Storybook for React & Vite
+
+`npm create storybook@latest`
+
+## Install Lucide React, A Icon Package
+`npm install lucide-react`
+
+* You can not put the for loop inside the "return" code block, you have to use "map" inside that block. 
+
+## Unidirectional data flow
+
+** React keep state in the common parent component
+** It pass state as Props to child components
+** It Update state via Callbacks 
+
