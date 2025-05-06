@@ -1,4 +1,4 @@
-import AddTodoForm from './AddTodoForm';
+import AddTodoForm from '../../components/AddTodoForm';
 
 export default function AddTodoFormHost() {
   const handleSubmit = (title: string) => {

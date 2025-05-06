@@ -1,39 +1,27 @@
 import { useState } from 'react';
-import TodoItem from './TodoItem';
-import { Todo } from '../types/todo';
+import TodoSummary from '../../components/TodoSummary';
+import { Todo } from '../../types/todo';
 
-export default function TodoItemHost() {
-  const [todo, setTodo] = useState<Todo>({
-    id: 1,
-    title: "Example Todo Item",
-    completed: false
-  });
+export default function TodoSummaryHost() {
+  const [todos, setTodos] = useState<Todo[]>([
+    { id: 1, title: "Learn React", completed: false },
+    { id: 2, title: "Build awesome apps", completed: true },
+    { id: 3, title: "Master TypeScript", completed: false },
+  ]);
 
-  const handleCompletedChange = (id: number, completed: boolean) => {
-    setTodo(prev => ({ ...prev, completed }));
-  };
-
-  const handleDelete = (id: number) => {
-    alert('Delete clicked! In a real app, this would delete the todo.');
+  const handleDeleteAllCompleted = () => {
+    setTodos(todos.filter(todo => !todo.completed));
   };
 
   return (
     <div className="container mx-auto p-4 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-4">TodoItem Component Demo</h1>
+      <h1 className="text-2xl font-bold mb-4">TodoSummary Component Demo</h1>
       <div className="bg-white shadow-md rounded p-6">
-        <h2 className="text-lg font-semibold mb-4">Interactive Todo Item</h2>
-        <TodoItem 
-          todo={todo}
-          onCompletedChange={handleCompletedChange}
-          onDelete={handleDelete}
+        <h2 className="text-lg font-semibold mb-4">Todo Statistics</h2>
+        <TodoSummary 
+          todos={todos} 
+          deleteAllCompleted={handleDeleteAllCompleted}
         />
-        <div className="mt-4 text-sm text-gray-600">
-          <p>Try:</p>
-          <ul className="list-disc ml-5 mt-2">
-            <li>Checking/unchecking the checkbox</li>
-            <li>Clicking the delete button</li>
-          </ul>
-        </div>
       </div>
     </div>
   );

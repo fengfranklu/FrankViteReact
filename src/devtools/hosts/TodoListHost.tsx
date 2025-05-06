@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import TodoList from './TodoList';
-import { Todo } from '../types/todo';
+import TodoList from '../../components/TodoList';
+import { Todo } from '../../types/todo';
 
 export default function TodoListHost() {
   const [todos, setTodos] = useState<Todo[]>([

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import TodoItem from './TodoItem';
-import { Todo } from '../types/todo';
+import TodoItem from '../../components/TodoItem';
+import { Todo } from '../../types/todo';
 
 export default function TodoItemHost() {
   const [todo, setTodo] = useState<Todo>({
@@ -10,7 +10,7 @@ export default function TodoItemHost() {
   });
 
   const handleCompletedChange = (id: number, completed: boolean) => {
-    setTodo(prev => ({ ...prev, completed }));
+    setTodo((prev: Todo) => ({ ...prev, completed }));
   };
 
   const handleDelete = (id: number) => {
