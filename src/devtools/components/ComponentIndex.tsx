@@ -3,31 +3,14 @@ import { useState, useEffect, useRef } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Plus, Edit, Save, Trash2, ChevronRight, ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react';
+import { ComponentInfo, ComponentGroup, ComponentState } from '../types';
+import { STORAGE_KEY, COLLAPSED_GROUPS_KEY, UNGROUPED_COLLAPSED_KEY, isLocalStorageAvailable } from '../utils/storage';
 
 // Define item types for drag and drop
 const ItemTypes = {
   COMPONENT: 'component',
   GROUP: 'group'
 };
-
-interface ComponentInfo {
-  id: string;
-  name: string;
-  path: string;
-  description: string;
-}
-
-interface ComponentGroup {
-  id: string;
-  name: string;
-  componentIds: string[];
-}
-
-interface ComponentState {
-  components: Record<string, ComponentInfo>;
-  groups: ComponentGroup[];
-  ungroupedComponentIds: string[];
-}
 
 // Initial components data
 const initialComponents: ComponentInfo[] = [
@@ -68,25 +51,6 @@ const initialState: ComponentState = {
   components: componentsRecord,
   groups: [],
   ungroupedComponentIds: initialComponents.map(c => c.id)
-};
-
-// Storage key for localStorage
-const STORAGE_KEY = 'componentGroups';
-
-const COLLAPSED_GROUPS_KEY = 'componentGroupsCollapsedGroups';
-const UNGROUPED_COLLAPSED_KEY = 'componentGroupsIsUngroupedCollapsed';
-
-// Function to check if localStorage is available
-const isLocalStorageAvailable = () => {
-  try {
-    const testKey = '__test__';
-    localStorage.setItem(testKey, testKey);
-    localStorage.removeItem(testKey);
-    return true;
-  } catch (e) {
-    console.error('localStorage is not available:', e);
-    return false;
-  }
 };
 
 // Draggable component card
