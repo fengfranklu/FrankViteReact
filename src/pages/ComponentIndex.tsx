@@ -73,6 +73,9 @@ const initialState: ComponentState = {
 // Storage key for localStorage
 const STORAGE_KEY = 'componentGroups';
 
+const COLLAPSED_GROUPS_KEY = 'componentGroupsCollapsedGroups';
+const UNGROUPED_COLLAPSED_KEY = 'componentGroupsIsUngroupedCollapsed';
+
 // Function to check if localStorage is available
 const isLocalStorageAvailable = () => {
   try {
@@ -326,8 +329,25 @@ export default function ComponentIndex() {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingGroupName, setEditingGroupName] = useState('');
   const [storageAvailable, setStorageAvailable] = useState(true);
-  const [isUngroupedCollapsed, setIsUngroupedCollapsed] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  
+  // Initialize collapse states from localStorage
+  const [isUngroupedCollapsed, setIsUngroupedCollapsed] = useState(() => {
+    const saved = localStorage.getItem(UNGROUPED_COLLAPSED_KEY);
+    return saved ? saved === 'true' : false;
+  });
+  
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem(COLLAPSED_GROUPS_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return new Set(parsed);
+        }
+      } catch {}
+    }
+    return new Set();
+  });
 
   // Check if localStorage is available
   useEffect(() => {
@@ -380,6 +400,18 @@ export default function ComponentIndex() {
       console.error('Failed to save component groups to localStorage', e);
     }
   }, [state, storageAvailable]);
+
+  // Save collapsedGroups to localStorage whenever it changes
+  useEffect(() => {
+    if (!storageAvailable) return;
+    localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify(Array.from(collapsedGroups)));
+  }, [collapsedGroups, storageAvailable]);
+
+  // Save isUngroupedCollapsed to localStorage whenever it changes
+  useEffect(() => {
+    if (!storageAvailable) return;
+    localStorage.setItem(UNGROUPED_COLLAPSED_KEY, isUngroupedCollapsed.toString());
+  }, [isUngroupedCollapsed, storageAvailable]);
 
   // Handle component drop
   const handleDrop = (
