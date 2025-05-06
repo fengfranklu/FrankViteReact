@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Plus, Edit, Save, Trash2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Plus, Edit, Save, Trash2, ChevronRight, ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react';
 
 // Define item types for drag and drop
 const ItemTypes = {
@@ -312,7 +312,7 @@ const GroupContainer = ({ index, onMoveGroup, children }: GroupContainerProps) =
   return (
     <div
       ref={ref}
-      className={`bg-gray-50 p-4 rounded-lg shadow-md ${isDragging ? 'opacity-50' : ''}`}
+      className={`bg-gray-50 rounded-lg shadow-md transition-all duration-300 ${isDragging ? 'opacity-50' : ''}`}
       style={{ cursor: 'move' }}
     >
       {children}
@@ -327,6 +327,7 @@ export default function ComponentIndex() {
   const [editingGroupName, setEditingGroupName] = useState('');
   const [storageAvailable, setStorageAvailable] = useState(true);
   const [isUngroupedCollapsed, setIsUngroupedCollapsed] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   // Check if localStorage is available
   useEffect(() => {
@@ -543,25 +544,44 @@ export default function ComponentIndex() {
                 index={index}
                 onMoveGroup={handleMoveGroup}
               >
-                <div className="flex justify-between items-center mb-4">
-                  {editingGroupId === group.id ? (
-                    <div className="flex flex-grow mr-2">
-                      <input
-                        type="text"
-                        value={editingGroupName}
-                        onChange={(e) => setEditingGroupName(e.target.value)}
-                        className="flex-grow px-3 py-1 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <button
-                        onClick={handleSaveGroupName}
-                        className="px-3 py-1 bg-green-600 text-white rounded-r-md hover:bg-green-700"
-                      >
-                        <Save size={16} />
-                      </button>
-                    </div>
-                  ) : (
-                    <h2 className="text-xl font-semibold">{group.name}</h2>
-                  )}
+                <div className="flex justify-between items-center p-4">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCollapsedGroups(prev => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(group.id)) {
+                            newSet.delete(group.id);
+                          } else {
+                            newSet.add(group.id);
+                          }
+                          return newSet;
+                        });
+                      }}
+                      className="p-1 text-gray-600 hover:text-blue-600 focus:outline-none"
+                    >
+                      {collapsedGroups.has(group.id) ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                    </button>
+                    {editingGroupId === group.id ? (
+                      <div className="flex flex-grow mr-2">
+                        <input
+                          type="text"
+                          value={editingGroupName}
+                          onChange={(e) => setEditingGroupName(e.target.value)}
+                          className="flex-grow px-3 py-1 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                          onClick={handleSaveGroupName}
+                          className="px-3 py-1 bg-green-600 text-white rounded-r-md hover:bg-green-700"
+                        >
+                          <Save size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <h2 className="text-xl font-semibold">{group.name}</h2>
+                    )}
+                  </div>
                   
                   <div className="flex space-x-2">
                     {editingGroupId !== group.id && (
@@ -581,12 +601,14 @@ export default function ComponentIndex() {
                   </div>
                 </div>
                 
-                <ComponentContainer
-                  containerId={group.id}
-                  componentIds={group.componentIds}
-                  components={state.components}
-                  onDrop={handleDrop}
-                />
+                {!collapsedGroups.has(group.id) && (
+                  <ComponentContainer
+                    containerId={group.id}
+                    componentIds={group.componentIds}
+                    components={state.components}
+                    onDrop={handleDrop}
+                  />
+                )}
               </GroupContainer>
             ))}
           </div>
