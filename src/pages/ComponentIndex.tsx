@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Plus, Edit, Save, Trash2 } from 'lucide-react';
+import { Plus, Edit, Save, Trash2, ChevronRight, ChevronLeft } from 'lucide-react';
 
 // Define item types for drag and drop
 const ItemTypes = {
@@ -326,6 +326,7 @@ export default function ComponentIndex() {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingGroupName, setEditingGroupName] = useState('');
   const [storageAvailable, setStorageAvailable] = useState(true);
+  const [isUngroupedCollapsed, setIsUngroupedCollapsed] = useState(false);
 
   // Check if localStorage is available
   useEffect(() => {
@@ -533,7 +534,7 @@ export default function ComponentIndex() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className={`grid gap-6 ${isUngroupedCollapsed ? 'grid-cols-[1fr_60px]' : 'grid-cols-1 md:grid-cols-2'}`}>
           {/* Groups */}
           <div className="space-y-6">
             {state.groups.map((group, index) => (
@@ -591,15 +592,27 @@ export default function ComponentIndex() {
           </div>
 
           {/* Ungrouped components */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">Ungrouped Components</h2>
-            <ComponentContainer
-              containerId="ungrouped"
-              componentIds={state.ungroupedComponentIds}
-              components={state.components}
-              onDrop={handleDrop}
-              className="min-h-[400px]"
-            />
+          <div className={`bg-gray-50 rounded-lg shadow-md transition-all duration-300 ${isUngroupedCollapsed ? 'w-[60px]' : ''}`}>
+            <div className="flex justify-between items-center p-4">
+              {!isUngroupedCollapsed && (
+                <h2 className="text-xl font-semibold">Ungrouped Components</h2>
+              )}
+              <button
+                onClick={() => setIsUngroupedCollapsed(!isUngroupedCollapsed)}
+                className="p-2 text-gray-600 hover:text-blue-600 focus:outline-none"
+              >
+                {isUngroupedCollapsed ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+              </button>
+            </div>
+            {!isUngroupedCollapsed && (
+              <ComponentContainer
+                containerId="ungrouped"
+                componentIds={state.ungroupedComponentIds}
+                components={state.components}
+                onDrop={handleDrop}
+                className="min-h-[400px]"
+              />
+            )}
           </div>
         </div>
       </div>
