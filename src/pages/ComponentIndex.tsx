@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Plus, Edit, Save, Trash2 } from 'lucide-react';
 
 // Define item types for drag and drop
 const ItemTypes = {
-  COMPONENT: 'component'
+  COMPONENT: 'component',
+  GROUP: 'group'
 };
 
 interface ComponentInfo {
@@ -172,9 +173,10 @@ interface ComponentContainerProps {
   componentIds: string[];
   components: Record<string, ComponentInfo>;
   onDrop: (item: { id: string; sourceId: string; index: number }, targetId: string, targetIndex: number) => void;
+  className?: string;
 }
 
-const ComponentContainer = ({ containerId, componentIds, components, onDrop }: ComponentContainerProps) => {
+const ComponentContainer = ({ containerId, componentIds, components, onDrop, className = '' }: ComponentContainerProps) => {
   const ref = useRef<HTMLDivElement>(null);
   
   const [{ isOver }, drop] = useDrop({
@@ -204,7 +206,7 @@ const ComponentContainer = ({ containerId, componentIds, components, onDrop }: C
   return (
     <div 
       ref={ref} 
-      className={`min-h-[200px] p-2 ${isOver ? 'bg-blue-50' : ''}`}
+      className={`p-2 ${isOver ? 'bg-blue-50' : ''} ${className}`}
     >
       {componentIds.map((componentId, index) => {
         const component = components[componentId];
@@ -236,8 +238,90 @@ const ComponentContainer = ({ containerId, componentIds, components, onDrop }: C
   );
 };
 
+// Draggable group container
+interface GroupContainerProps {
+  index: number;
+  onMoveGroup: (dragIndex: number, hoverIndex: number) => void;
+  children: React.ReactNode;
+}
+
+const GroupContainer = ({ index, onMoveGroup, children }: GroupContainerProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+  
+  const [{ isDragging }, drag] = useDrag({
+    type: ItemTypes.GROUP,
+    item: { type: ItemTypes.GROUP, index },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging()
+    })
+  });
+
+  const [, drop] = useDrop({
+    accept: ItemTypes.GROUP,
+    hover: (item: { type: string; index: number }, monitor) => {
+      if (!ref.current) {
+        return;
+      }
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      // Don't replace items with themselves
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      // Determine rectangle on screen
+      const hoverBoundingRect = ref.current?.getBoundingClientRect();
+
+      // Get vertical middle
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+
+      // Determine mouse position
+      const clientOffset = monitor.getClientOffset();
+
+      // Get pixels to the top
+      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
+
+      // Only perform the move when the mouse has crossed half of the items height
+      // When dragging downwards, only move when the cursor is below 50%
+      // When dragging upwards, only move when the cursor is above 50%
+
+      // Dragging downwards
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return;
+      }
+
+      // Dragging upwards
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+        return;
+      }
+
+      // Time to actually perform the action
+      onMoveGroup(dragIndex, hoverIndex);
+
+      // Note: we're mutating the monitor item here!
+      // Generally it's better to avoid mutations,
+      // but it's good here for the sake of performance
+      // to avoid expensive index searches.
+      item.index = hoverIndex;
+    }
+  });
+
+  drag(drop(ref));
+
+  return (
+    <div
+      ref={ref}
+      className={`bg-gray-50 p-4 rounded-lg shadow-md ${isDragging ? 'opacity-50' : ''}`}
+      style={{ cursor: 'move' }}
+    >
+      {children}
+    </div>
+  );
+};
+
 export default function ComponentIndex() {
-  const [state, setState] = useState<ComponentState>(initialState);
+  const [state, setState] = useState<ComponentState | null>(null);
   const [newGroupName, setNewGroupName] = useState('');
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingGroupName, setEditingGroupName] = useState('');
@@ -250,15 +334,16 @@ export default function ComponentIndex() {
 
   // Load state from localStorage on component mount
   useEffect(() => {
-    if (!storageAvailable) return;
+    if (!storageAvailable) {
+      setState(initialState);
+      return;
+    }
     
     try {
       const savedState = localStorage.getItem(STORAGE_KEY);
-      console.log('Raw saved state:', savedState);
       
       if (savedState) {
         const parsedState = JSON.parse(savedState);
-        console.log('Parsed state:', parsedState);
         
         // Validate the structure of the parsed state
         if (
@@ -268,94 +353,31 @@ export default function ComponentIndex() {
           'groups' in parsedState &&
           'ungroupedComponentIds' in parsedState
         ) {
-          console.log('Valid state structure, applying saved state');
-          
-          // Force a clean state update to ensure React properly applies the state
-          setTimeout(() => {
-            setState(parsedState);
-            console.log('State updated from localStorage');
-          }, 0);
+          setState(parsedState);
         } else {
           console.warn('Invalid state structure in localStorage, using default state');
+          setState(initialState);
         }
       } else {
         console.log('No saved state found, using default state');
+        setState(initialState);
       }
     } catch (e) {
       console.error('Failed to parse saved component groups', e);
+      setState(initialState);
     }
   }, [storageAvailable]);
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
-    if (!storageAvailable) return;
+    if (!storageAvailable || !state) return;
     
     try {
-      const stateToSave = JSON.stringify(state);
-      console.log('Saving state to localStorage:', stateToSave);
-      localStorage.setItem(STORAGE_KEY, stateToSave);
-      
-      // Verify the save was successful
-      const savedState = localStorage.getItem(STORAGE_KEY);
-      if (savedState !== stateToSave) {
-        console.warn('State verification failed - saved state does not match');
-      } else {
-        console.log('State successfully saved to localStorage');
-      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
       console.error('Failed to save component groups to localStorage', e);
     }
   }, [state, storageAvailable]);
-
-  // Test function to verify localStorage is working
-  const testLocalStorage = useCallback(() => {
-    if (!storageAvailable) {
-      alert('localStorage is not available in this browser');
-      return;
-    }
-    
-    try {
-      // Save current state
-      const currentState = JSON.stringify(state);
-      localStorage.setItem('__test_state__', currentState);
-      
-      // Read it back
-      const readState = localStorage.getItem('__test_state__');
-      
-      if (readState === currentState) {
-        alert('localStorage test passed! Data can be saved and retrieved.');
-      } else {
-        alert('localStorage test failed! Saved data does not match retrieved data.');
-      }
-      
-      // Clean up
-      localStorage.removeItem('__test_state__');
-    } catch (e) {
-      alert(`localStorage test error: ${e.message}`);
-    }
-  }, [state, storageAvailable]);
-
-  // Force reload state from localStorage
-  const forceReloadFromStorage = useCallback(() => {
-    if (!storageAvailable) {
-      alert('localStorage is not available');
-      return;
-    }
-    
-    try {
-      const savedState = localStorage.getItem(STORAGE_KEY);
-      if (!savedState) {
-        alert('No saved state found in localStorage');
-        return;
-      }
-      
-      const parsedState = JSON.parse(savedState);
-      setState(parsedState);
-      alert('State reloaded from localStorage');
-    } catch (e) {
-      alert(`Error reloading state: ${e.message}`);
-    }
-  }, [storageAvailable]);
 
   // Handle component drop
   const handleDrop = (
@@ -363,8 +385,10 @@ export default function ComponentIndex() {
     targetId: string, 
     targetIndex: number
   ) => {
+    if (!state) return;
+    
     // Create a copy of the current state
-    const newState = { ...state };
+    const newState: ComponentState = { ...state };
     const componentId = item.id;
     
     // Remove from source
@@ -392,7 +416,7 @@ export default function ComponentIndex() {
 
   // Add a new group
   const handleAddGroup = () => {
-    if (!newGroupName.trim()) return;
+    if (!newGroupName.trim() || !state) return;
     
     const newGroup: ComponentGroup = {
       id: `group-${Date.now()}`,
@@ -400,25 +424,25 @@ export default function ComponentIndex() {
       componentIds: []
     };
     
-    setState(prev => ({
-      ...prev,
-      groups: [...prev.groups, newGroup]
-    }));
+    setState({
+      ...state,
+      groups: [...state.groups, newGroup]
+    });
     
     setNewGroupName('');
   };
 
   // Delete a group and move its components to ungrouped
   const handleDeleteGroup = (groupId: string) => {
-    setState(prev => {
-      const group = prev.groups.find(g => g.id === groupId);
-      if (!group) return prev;
-      
-      return {
-        ...prev,
-        groups: prev.groups.filter(g => g.id !== groupId),
-        ungroupedComponentIds: [...prev.ungroupedComponentIds, ...group.componentIds]
-      };
+    if (!state) return;
+    
+    const group = state.groups.find(g => g.id === groupId);
+    if (!group) return;
+    
+    setState({
+      ...state,
+      groups: state.groups.filter(g => g.id !== groupId),
+      ungroupedComponentIds: [...state.ungroupedComponentIds, ...group.componentIds]
     });
   };
 
@@ -430,20 +454,47 @@ export default function ComponentIndex() {
 
   // Save edited group name
   const handleSaveGroupName = () => {
-    if (!editingGroupId || !editingGroupName.trim()) {
+    if (!editingGroupId || !editingGroupName.trim() || !state) {
       setEditingGroupId(null);
       return;
     }
     
-    setState(prev => ({
-      ...prev,
-      groups: prev.groups.map(g => 
+    setState({
+      ...state,
+      groups: state.groups.map(g => 
         g.id === editingGroupId ? { ...g, name: editingGroupName } : g
       )
-    }));
+    });
     
     setEditingGroupId(null);
   };
+
+  // Handle group reordering
+  const handleMoveGroup = (dragIndex: number, hoverIndex: number) => {
+    if (!state) return;
+    
+    const newGroups = [...state.groups];
+    const draggedGroup = newGroups[dragIndex];
+    
+    // Remove the dragged group
+    newGroups.splice(dragIndex, 1);
+    // Insert it at the new position
+    newGroups.splice(hoverIndex, 0, draggedGroup);
+    
+    setState({
+      ...state,
+      groups: newGroups
+    });
+  };
+
+  // If state is not yet loaded, show loading state
+  if (!state) {
+    return (
+      <div className="container mx-auto p-4 max-w-6xl">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -460,57 +511,37 @@ export default function ComponentIndex() {
         {/* Add new group form */}
         <div className="mb-8 p-4 bg-white rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4">Add New Group</h2>
-          <div className="flex">
+          <div className="flex relative">
             <input
               type="text"
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleAddGroup();
+                }
+              }}
               placeholder="Group name"
-              className="flex-grow px-4 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-grow px-4 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
             />
             <button
               onClick={handleAddGroup}
-              className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
             >
               <Plus size={20} />
             </button>
           </div>
-          
-          {/* Debug buttons - only visible in development */}
-          {process.env.NODE_ENV !== 'production' && (
-            <div className="flex space-x-2">
-              <button 
-                onClick={testLocalStorage}
-                className="mt-2 px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              >
-                Test Storage
-              </button>
-              <button 
-                onClick={forceReloadFromStorage}
-                className="mt-2 px-3 py-1 text-xs bg-blue-200 text-blue-700 rounded hover:bg-blue-300"
-              >
-                Force Reload
-              </button>
-            </div>
-          )}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Ungrouped components */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">Ungrouped Components</h2>
-            <ComponentContainer
-              containerId="ungrouped"
-              componentIds={state.ungroupedComponentIds}
-              components={state.components}
-              onDrop={handleDrop}
-            />
-          </div>
-          
           {/* Groups */}
           <div className="space-y-6">
-            {state.groups.map((group) => (
-              <div key={group.id} className="bg-gray-50 p-4 rounded-lg shadow-md">
+            {state.groups.map((group, index) => (
+              <GroupContainer
+                key={group.id}
+                index={index}
+                onMoveGroup={handleMoveGroup}
+              >
                 <div className="flex justify-between items-center mb-4">
                   {editingGroupId === group.id ? (
                     <div className="flex flex-grow mr-2">
@@ -555,8 +586,20 @@ export default function ComponentIndex() {
                   components={state.components}
                   onDrop={handleDrop}
                 />
-              </div>
+              </GroupContainer>
             ))}
+          </div>
+
+          {/* Ungrouped components */}
+          <div className="bg-gray-50 p-4 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">Ungrouped Components</h2>
+            <ComponentContainer
+              containerId="ungrouped"
+              componentIds={state.ungroupedComponentIds}
+              components={state.components}
+              onDrop={handleDrop}
+              className="min-h-[400px]"
+            />
           </div>
         </div>
       </div>
