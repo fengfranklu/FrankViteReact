@@ -21,6 +21,8 @@ npm install react-dnd react-dnd-html5-backend lucide-react
 
 3. Configure the devtools in your app:
 
+basically plugin/integrate the 'devtools' into your app's app.tsx 
+
 ```tsx
 // App.tsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -49,6 +51,8 @@ export default function App() {
 ```
 
 4. Create component hosts:
+
+you can use the 'ComponetHostTemplate.tsx' as a starting point
 
 ```tsx
 // src/devtools/hosts/MyComponentHost.tsx
