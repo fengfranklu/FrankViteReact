@@ -4,7 +4,9 @@ import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Plus, Edit, Save, Trash2, ChevronRight, ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react';
 import { ComponentInfo, ComponentGroup, ComponentState } from '../types';
-import { STORAGE_KEY, COLLAPSED_GROUPS_KEY, UNGROUPED_COLLAPSED_KEY, isLocalStorageAvailable } from '../utils/storage';
+import { getStorageKeys, isLocalStorageAvailable } from '../utils/storage';
+import { defaultConfig } from '../config';
+import { todoComponentRegistration } from '../registrations/todoComponents';
 
 // Define item types for drag and drop
 const ItemTypes = {
@@ -12,46 +14,11 @@ const ItemTypes = {
   GROUP: 'group'
 };
 
-// Initial components data
-const initialComponents: ComponentInfo[] = [
-  {
-    id: 'todolist',
-    name: 'TodoList',
-    path: '/components/todolist',
-    description: 'A component for managing and displaying a list of todo items'
-  },
-  {
-    id: 'addtodoform',
-    name: 'AddTodoForm',
-    path: '/components/addtodoform',
-    description: 'A form component for adding new todo items'
-  },
-  {
-    id: 'todoitem',
-    name: 'TodoItem',
-    path: '/components/todoitem',
-    description: 'A component for displaying and managing individual todo items'
-  },
-  {
-    id: 'todosummary',
-    name: 'TodoSummary',
-    path: '/components/todosummary',
-    description: 'A component that shows todo completion statistics'
-  }
-];
+// Get storage keys from config
+const { STORAGE_KEY, COLLAPSED_GROUPS_KEY, UNGROUPED_COLLAPSED_KEY } = getStorageKeys(defaultConfig);
 
-// Convert array to record for easier access
-const componentsRecord = initialComponents.reduce((acc, component) => {
-  acc[component.id] = component;
-  return acc;
-}, {} as Record<string, ComponentInfo>);
-
-// Initial state with all components ungrouped
-const initialState: ComponentState = {
-  components: componentsRecord,
-  groups: [],
-  ungroupedComponentIds: initialComponents.map(c => c.id)
-};
+// Get initial state from registration
+const initialState = todoComponentRegistration.getInitialState(defaultConfig);
 
 // Draggable component card
 interface ComponentCardProps {
