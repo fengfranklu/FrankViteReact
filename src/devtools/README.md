@@ -106,6 +106,65 @@ export const componentRegistrations = [
 ];
 ```
 
+## Style Isolation
+
+The devtools components are designed to maintain their look and feel across different projects, regardless of the main project's styling. This is achieved through Tailwind's layer system and scoped classes.
+
+### How it works
+
+1. The devtools styles are defined in `src/devtools/styles/devtools.css`:
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .devtools-container {
+    @apply container mx-auto p-4 max-w-6xl;
+  }
+
+  .devtools-card {
+    @apply block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow;
+  }
+
+  /* ... other devtools-specific classes ... */
+}
+```
+
+2. These styles are automatically scoped to the devtools components and won't affect or be affected by the main project's styles.
+
+3. The styles are imported in the ComponentIndex component:
+```tsx
+import '../styles/devtools.css';
+```
+
+### Benefits
+
+- Complete style isolation from the main project
+- Consistent look and feel across different projects
+- No style conflicts with the main application
+- Maintains all Tailwind functionality while being scoped
+- Easy to maintain and update styles in one place
+
+### Customization
+
+If you need to customize the devtools styles:
+
+1. Modify the classes in `src/devtools/styles/devtools.css`
+2. Add new classes using the `@layer components` directive
+3. Use the `devtools-` prefix for any new utility classes to maintain isolation
+
+Example of adding a custom style:
+```css
+@layer components {
+  .devtools-custom-element {
+    @apply bg-blue-100 p-4 rounded-lg;
+  }
+}
+```
+
+This approach ensures that the devtools maintain their appearance and functionality regardless of the main project's styling, making them truly portable and reusable.
+
 ## Customization
 
 ### Styling
@@ -122,82 +181,6 @@ const config: DevToolsConfig = {
   }
 };
 ```
-
-### Style Isolation
-
-To ensure the devtools maintain their look and feel across different projects, we use CSS modules and style scoping. The devtools come with their own isolated styles that won't be affected by the main project's CSS.
-
-1. Create a `styles` directory in your devtools folder:
-```
-src/devtools/
-  ├── styles/
-  │   ├── devtools.module.css
-  │   └── components.module.css
-```
-
-2. Use CSS modules in your devtools components:
-```tsx
-// Example component using CSS modules
-import styles from '../styles/components.module.css';
-
-export function DevToolsComponent() {
-  return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>DevTools</h1>
-    </div>
-  );
-}
-```
-
-3. Define your styles in the CSS modules:
-```css
-/* styles/components.module.css */
-.container {
-  /* Use !important for critical styles to ensure they take precedence */
-  background-color: #ffffff !important;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-}
-
-.title {
-  color: #333333 !important;
-  font-size: 1.5rem !important;
-  font-weight: 600 !important;
-}
-```
-
-4. For Tailwind classes, use the `@layer` directive to scope them:
-```css
-/* styles/devtools.module.css */
-@layer devtools {
-  .devtools-container {
-    @apply bg-white rounded-lg shadow-md p-4;
-  }
-  
-  .devtools-header {
-    @apply text-xl font-bold mb-4;
-  }
-}
-```
-
-5. Update your tailwind.config.js to include the devtools styles:
-```js
-// tailwind.config.js
-module.exports = {
-  content: [
-    './src/**/*.{js,jsx,ts,tsx}',
-    './src/devtools/**/*.{js,jsx,ts,tsx}',
-  ],
-  // ... other config
-}
-```
-
-This approach ensures that:
-- Devtools styles are completely isolated from the main project
-- Styles won't be affected by the main project's CSS
-- The look and feel remains consistent across different projects
-- Critical styles are preserved using !important where necessary
-- Tailwind classes are properly scoped to the devtools
 
 ### Storage
 

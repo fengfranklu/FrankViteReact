@@ -7,6 +7,7 @@ import { ComponentInfo, ComponentGroup, ComponentState } from '../types';
 import { getStorageKeys, isLocalStorageAvailable } from '../utils/storage';
 import { defaultConfig } from '../config';
 import { todoComponentRegistration } from '../registrations/todoComponents';
+import '../styles/devtools.css';
 
 // Define item types for drag and drop
 const ItemTypes = {
@@ -48,13 +49,13 @@ const ComponentCard = ({ componentId, component, index }: ComponentCardProps) =>
     >
       <Link
         to={component.path}
-        className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+        className="devtools-card"
         onClick={(e) => isDragging && e.preventDefault()}
       >
-        <h2 className="text-xl font-semibold text-blue-600 mb-2">
+        <h2 className="devtools-card-title">
           {component.name}
         </h2>
-        <p className="text-gray-600">{component.description}</p>
+        <p className="devtools-card-description">{component.description}</p>
       </Link>
     </div>
   );
@@ -89,13 +90,13 @@ const GroupComponentCard = ({ componentId, component, groupId, index }: GroupCom
     >
       <Link
         to={component.path}
-        className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+        className="devtools-card"
         onClick={(e) => isDragging && e.preventDefault()}
       >
-        <h2 className="text-xl font-semibold text-blue-600 mb-2">
+        <h2 className="devtools-card-title">
           {component.name}
         </h2>
-        <p className="text-gray-600">{component.description}</p>
+        <p className="devtools-card-description">{component.description}</p>
       </Link>
     </div>
   );
@@ -463,7 +464,7 @@ export default function ComponentIndex() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="container mx-auto p-4 max-w-6xl">
+      <div className="devtools-container">
         <h1 className="text-3xl font-bold mb-8">Component Library</h1>
         
         {/* Storage status indicator */}
@@ -487,11 +488,11 @@ export default function ComponentIndex() {
                 }
               }}
               placeholder="Group name"
-              className="flex-grow px-4 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+              className="devtools-input"
             />
             <button
               onClick={handleAddGroup}
-              className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+              className="devtools-button-primary"
             >
               <Plus size={20} />
             </button>
@@ -507,84 +508,86 @@ export default function ComponentIndex() {
                 index={index}
                 onMoveGroup={handleMoveGroup}
               >
-                <div className="flex justify-between items-center p-4">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCollapsedGroups(prev => {
-                          const newSet = new Set(prev);
-                          if (newSet.has(group.id)) {
-                            newSet.delete(group.id);
-                          } else {
-                            newSet.add(group.id);
-                          }
-                          return newSet;
-                        });
-                      }}
-                      className="p-1 text-gray-600 hover:text-blue-600 focus:outline-none"
-                    >
-                      {collapsedGroups.has(group.id) ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-                    </button>
-                    {editingGroupId === group.id ? (
-                      <div className="flex flex-grow mr-2">
-                        <input
-                          type="text"
-                          value={editingGroupName}
-                          onChange={(e) => setEditingGroupName(e.target.value)}
-                          className="flex-grow px-3 py-1 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                <div className="devtools-group">
+                  <div className="devtools-group-header">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCollapsedGroups(prev => {
+                            const newSet = new Set(prev);
+                            if (newSet.has(group.id)) {
+                              newSet.delete(group.id);
+                            } else {
+                              newSet.add(group.id);
+                            }
+                            return newSet;
+                          });
+                        }}
+                        className="devtools-button"
+                      >
+                        {collapsedGroups.has(group.id) ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                      </button>
+                      {editingGroupId === group.id ? (
+                        <div className="flex flex-grow mr-2">
+                          <input
+                            type="text"
+                            value={editingGroupName}
+                            onChange={(e) => setEditingGroupName(e.target.value)}
+                            className="devtools-input"
+                          />
+                          <button
+                            onClick={handleSaveGroupName}
+                            className="devtools-button-primary"
+                          >
+                            <Save size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <h2 className="text-xl font-semibold">{group.name}</h2>
+                      )}
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      {editingGroupId !== group.id && (
                         <button
-                          onClick={handleSaveGroupName}
-                          className="px-3 py-1 bg-green-600 text-white rounded-r-md hover:bg-green-700"
+                          onClick={() => handleStartEditGroup(group)}
+                          className="devtools-button"
                         >
-                          <Save size={16} />
+                          <Edit size={16} />
                         </button>
-                      </div>
-                    ) : (
-                      <h2 className="text-xl font-semibold">{group.name}</h2>
-                    )}
+                      )}
+                      <button
+                        onClick={() => handleDeleteGroup(group.id)}
+                        className="devtools-button devtools-button-danger"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                   
-                  <div className="flex space-x-2">
-                    {editingGroupId !== group.id && (
-                      <button
-                        onClick={() => handleStartEditGroup(group)}
-                        className="p-1 text-gray-600 hover:text-blue-600 focus:outline-none"
-                      >
-                        <Edit size={16} />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDeleteGroup(group.id)}
-                      className="p-1 text-gray-600 hover:text-red-600 focus:outline-none"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+                  {!collapsedGroups.has(group.id) && (
+                    <ComponentContainer
+                      containerId={group.id}
+                      componentIds={group.componentIds}
+                      components={state.components}
+                      onDrop={handleDrop}
+                    />
+                  )}
                 </div>
-                
-                {!collapsedGroups.has(group.id) && (
-                  <ComponentContainer
-                    containerId={group.id}
-                    componentIds={group.componentIds}
-                    components={state.components}
-                    onDrop={handleDrop}
-                  />
-                )}
               </GroupContainer>
             ))}
           </div>
 
           {/* Ungrouped components */}
-          <div className={`bg-gray-50 rounded-lg shadow-md transition-all duration-300 ${isUngroupedCollapsed ? 'w-[60px]' : ''}`}>
-            <div className="flex justify-between items-center p-4">
+          <div className={`devtools-group ${isUngroupedCollapsed ? 'w-[60px]' : ''}`}>
+            <div className="devtools-group-header">
               {!isUngroupedCollapsed && (
                 <h2 className="text-xl font-semibold">Ungrouped Components</h2>
               )}
               <button
                 onClick={() => setIsUngroupedCollapsed(!isUngroupedCollapsed)}
-                className="p-2 text-gray-600 hover:text-blue-600 focus:outline-none"
+                className="devtools-button"
               >
                 {isUngroupedCollapsed ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
               </button>
