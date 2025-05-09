@@ -297,7 +297,7 @@ export default function ComponentIndex() {
       const savedState = localStorage.getItem(STORAGE_KEY);
       
       if (savedState) {
-        const parsedState = JSON.parse(savedState);
+        const parsedState = JSON.parse(savedState) as ComponentState;
         
         // Validate the structure of the parsed state
         if (
@@ -307,7 +307,28 @@ export default function ComponentIndex() {
           'groups' in parsedState &&
           'ungroupedComponentIds' in parsedState
         ) {
-          setState(parsedState);
+          // Check if we have new components that aren't in the saved state
+          const currentComponentIds = new Set(Object.keys(initialState.components));
+          const savedComponentIds = new Set(Object.keys(parsedState.components));
+          
+          // If we have new components, merge them into the saved state
+          if (currentComponentIds.size > savedComponentIds.size) {
+            const newComponentIds = Array.from(currentComponentIds).filter(id => !savedComponentIds.has(id));
+            const updatedState: ComponentState = {
+              ...parsedState,
+              components: {
+                ...parsedState.components,
+                ...newComponentIds.reduce((acc: Record<string, ComponentInfo>, id: string) => {
+                  acc[id] = initialState.components[id];
+                  return acc;
+                }, {})
+              },
+              ungroupedComponentIds: [...parsedState.ungroupedComponentIds, ...newComponentIds]
+            };
+            setState(updatedState);
+          } else {
+            setState(parsedState);
+          }
         } else {
           console.warn('Invalid state structure in localStorage, using default state');
           setState(initialState);

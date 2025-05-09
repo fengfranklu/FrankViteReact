@@ -3,18 +3,7 @@ import { Route, Link } from 'react-router-dom';
 import { ComponentLayout } from './components/ComponentLayout';
 import ComponentIndex from './components/ComponentIndex';
 import { todoComponentRegistration } from './registrations/todoComponents';
-import AddTodoFormHost from './hosts/AddTodoFormHost';
-import TodoItemHost from './hosts/TodoItemHost';
-import TodoListHost from './hosts/TodoListHost';
-import TodoSummaryHost from './hosts/TodoSummaryHost';
-
-// Map of component IDs to their host components
-const componentHosts: Record<string, React.ComponentType> = {
-  todolist: TodoListHost,
-  addtodoform: AddTodoFormHost,
-  todoitem: TodoItemHost,
-  todosummary: TodoSummaryHost
-};
+import { hostComponents } from './registrations/hostComponents';
 
 // Generate routes from component registrations
 const componentRoutes = todoComponentRegistration.components.map(component => (
@@ -23,7 +12,7 @@ const componentRoutes = todoComponentRegistration.components.map(component => (
     path={component.path}
     element={
       <ComponentLayout>
-        {React.createElement(componentHosts[component.id])}
+        {React.createElement(hostComponents[component.id])}
       </ComponentLayout>
     }
   />
