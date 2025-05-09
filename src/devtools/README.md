@@ -10,7 +10,7 @@ A development tool for visualizing and testing React components in isolation.
 - Isolated component testing environment
 - Customizable styling and configuration
 
-## Setup
+## Initial Setup ( One time only, Five Steps )
 
 1. Copy the `devtools` directory to your project's `src` folder.
 
@@ -50,7 +50,19 @@ export default function App() {
 }
 ```
 
-4. Create component hosts:
+4. Provide a unique storage keys by editing file devtools/config.ts
+
+5. Cleanup Old Configurations
+
+   - Edit/Comment out all non Sample Component host from file devtools/registrations/hostComponents.ts
+
+   - Edit/Comment out all non Sample Component Info Entries from file devtools/registrations/todoComponents.ts
+
+     
+
+## Host Component Setup ( For each component, Two steps )
+
+1. **Create *component* hosts:**
 
 you can use the 'ComponetHostTemplate.tsx' as a starting point
 
@@ -70,19 +82,29 @@ export default function MyComponentHost() {
 }
 ```
 
-5. Register your components:
+2. **Register your components:**
+
+   You need update both hostComponents.ts and todoComponents.ts to add your component and componenthost to the list
+
+   for todoComponents.ts file you do not need to worry about the path locations. 
 
 ```tsx
-// src/devtools/registrations/myComponents.ts
+// src/devtools/registrations/todoComponents.ts
 import { ComponentInfo } from '../types';
 import { createComponentRegistration } from '../config/components';
 
-const myComponents: ComponentInfo[] = [
+const todoComponents: ComponentInfo[] = [
   {
     id: 'mycomponent',
     name: 'MyComponent',
     path: '/components/mycomponent',
     description: 'Description of my component'
+  },
+  {
+    id: 'sampletodoitem',
+    name: 'SampleTodoItem',
+    path: '/components/sampletodoitem',
+    description: 'A sample component for displaying and managing individual todo items'
   },
   // Add more components...
 ];
@@ -90,21 +112,94 @@ const myComponents: ComponentInfo[] = [
 export const myComponentRegistration = createComponentRegistration(myComponents);
 ```
 
-6. Clean up example files:
-   - Delete the example component host file from `src/devtools/hosts/ExampleComponentHost.tsx`
-   - Remove the example component registration from `src/devtools/registrations/exampleComponents.ts`
-   - Update the main registration file (`src/devtools/registrations/index.ts`) to only include your component registrations
 
-Example of a clean `index.ts`:
+
+​	hostComponents.ts is the file that you need to get the right path to point to the right host file.
+
+​	within you host file, you specify where you can find your component file.
+
 ```tsx
-// src/devtools/registrations/index.ts
-import { myComponentRegistration } from './myComponents';
+// src/devtools/registrations/hostComponents.ts
+import { ComponentType } from 'react';
 
-export const componentRegistrations = [
-  myComponentRegistration,
-  // Add more registrations as needed
-];
+import AddTodoFormHost from '../../hostcomponents/AddTodoFormHost';
+import TodoItemHost from '../../hostcomponents/TodoItemHost';
+import TodoListHost from '../../hostcomponents/TodoListHost';
+import TodoSummaryHost from '../../hostcomponents/TodoSummaryHost';
+import SampleAddTodoFormHost from '../samplehosts/SampleAddTodoFormHost';
+import SampleTodoItemHost from '../samplehosts/SampleTodoItemHost';
+import SampleTodoListHost from '../samplehosts/SampleTodoListHost';
+import SampleTodoSummaryHost from '../samplehosts/SampleTodoSummaryHost';
+
+// Map of component IDs to their host components
+export const hostComponents: Record<string, ComponentType> = {
+  todolist: TodoListHost,
+  addtodoform: AddTodoFormHost,
+  todoitem: TodoItemHost,
+  todosummary: TodoSummaryHost,
+  sampletodolist: SampleTodoListHost,
+  sampleaddtodoform: SampleAddTodoFormHost,
+  sampletodoitem: SampleTodoItemHost,
+  sampletodosummary: SampleTodoSummaryHost
+}; 
+
+
+
 ```
+
+
+
+## Host Component Setup by AI   ( One Step ) 
+
+## Prompt Template:
+
+```
+Please help me create a component host file for [ComponentName] using the ComponentHostTemplate.tsx as a reference. The component is located at [path/to/component].
+
+Requirements:
+1. Analyze the component's props, dependencies, and requirements
+2. Create a self-contained host file with all necessary mocks and test data
+3. Include comprehensive comments for all props and their expected values
+4. Set up any required mock services or data providers
+5. Ensure the component can be tested in isolation
+
+Please follow this structure:
+- Import the component and any necessary dependencies
+- Set up mock data/services based on the component's requirements
+- Document all props with comments
+- Create a clean, isolated testing environment
+- Include any necessary state management or context providers
+
+The host file should be placed in src/devtools/hosts/[ComponentName]Host.tsx
+
+Upon finish the creation of the host file,please also register this [ComponentName]Host by updating both registrations/hostComponents.ts and registrations/todoComponents.ts files to ensure proper imports and mapping
+```
+
+Example usage:
+
+```
+Please help me create a component host file for TodoList using the ComponentHostTemplate.tsx as a reference. The component is located at src/components/TodoList.tsx.
+
+Requirements:
+1. Analyze the component's props, dependencies, and requirements
+2. Create a self-contained host file with all necessary mocks and test data
+3. Include comprehensive comments for all props and their expected values
+4. Set up any required mock services or data providers
+5. Ensure the component can be tested in isolation
+
+Please follow this structure:
+- Import the component and any necessary dependencies
+- Set up mock data/services based on the component's requirements
+- Document all props with comments
+- Create a clean, isolated testing environment
+- Include any necessary state management or context providers
+
+The host file should be placed in src/devtools/hosts/TodoListHost.tsx
+
+Upon finish the creation of the host file, please also register this TodoListHost by updating both registrations/hostComponents.ts and registrations/todoComponents.ts files to ensure proper imports and mapping
+```
+
+
 
 ## Style Isolation
 
@@ -165,6 +260,8 @@ Example of adding a custom style:
 
 This approach ensures that the devtools maintain their appearance and functionality regardless of the main project's styling, making them truly portable and reusable.
 
+
+
 ## Customization
 
 ### Styling
@@ -223,54 +320,3 @@ const config: DevToolsConfig = {
 
 Feel free to submit issues and enhancement requests! 
 
-## Cursor AI Prompt Template for Component Hosts
-
-Use the following prompt template with Cursor AI to generate component host files:
-
-```
-Please help me create a component host file for [ComponentName] using the ComponentHostTemplate.tsx as a reference. The component is located at [path/to/component].
-
-Requirements:
-1. Analyze the component's props, dependencies, and requirements
-2. Create a self-contained host file with all necessary mocks and test data
-3. Include comprehensive comments for all props and their expected values
-4. Set up any required mock services or data providers
-5. Ensure the component can be tested in isolation
-
-Please follow this structure:
-- Import the component and any necessary dependencies
-- Set up mock data/services based on the component's requirements
-- Document all props with comments
-- Create a clean, isolated testing environment
-- Include any necessary state management or context providers
-
-The host file should be placed in src/devtools/hosts/[ComponentName]Host.tsx
-```
-
-Example usage:
-```
-Please help me create a component host file for TodoList using the ComponentHostTemplate.tsx as a reference. The component is located at src/components/TodoList.tsx.
-
-Requirements:
-1. Analyze the component's props, dependencies, and requirements
-2. Create a self-contained host file with all necessary mocks and test data
-3. Include comprehensive comments for all props and their expected values
-4. Set up any required mock services or data providers
-5. Ensure the component can be tested in isolation
-
-Please follow this structure:
-- Import the component and any necessary dependencies
-- Set up mock data/services based on the component's requirements
-- Document all props with comments
-- Create a clean, isolated testing environment
-- Include any necessary state management or context providers
-
-The host file should be placed in src/devtools/hosts/TodoListHost.tsx
-```
-
-This prompt will help Cursor AI generate a well-structured host file that:
-- Is self-contained with all necessary mocks
-- Provides clear documentation for props and usage
-- Sets up proper test data and services
-- Creates an isolated testing environment
-- Follows the project's component host patterns 
