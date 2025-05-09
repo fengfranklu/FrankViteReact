@@ -1,10 +1,33 @@
+import React from 'react';
 import { Route, Link } from 'react-router-dom';
 import { ComponentLayout } from './components/ComponentLayout';
 import ComponentIndex from './components/ComponentIndex';
+import { todoComponentRegistration } from './registrations/todoComponents';
 import AddTodoFormHost from './hosts/AddTodoFormHost';
 import TodoItemHost from './hosts/TodoItemHost';
 import TodoListHost from './hosts/TodoListHost';
 import TodoSummaryHost from './hosts/TodoSummaryHost';
+
+// Map of component IDs to their host components
+const componentHosts: Record<string, React.ComponentType> = {
+  todolist: TodoListHost,
+  addtodoform: AddTodoFormHost,
+  todoitem: TodoItemHost,
+  todosummary: TodoSummaryHost
+};
+
+// Generate routes from component registrations
+const componentRoutes = todoComponentRegistration.components.map(component => (
+  <Route
+    key={component.id}
+    path={component.path}
+    element={
+      <ComponentLayout>
+        {React.createElement(componentHosts[component.id])}
+      </ComponentLayout>
+    }
+  />
+));
 
 export const devToolsRoutes = [
   <Route 
@@ -22,40 +45,5 @@ export const devToolsRoutes = [
       </>
     } 
   />,
-  <Route 
-    key="todolist" 
-    path="/components/todolist" 
-    element={
-      <ComponentLayout>
-        <TodoListHost />
-      </ComponentLayout>
-    } 
-  />,
-  <Route 
-    key="addtodoform" 
-    path="/components/addtodoform" 
-    element={
-      <ComponentLayout>
-        <AddTodoFormHost />
-      </ComponentLayout>
-    } 
-  />,
-  <Route 
-    key="todoitem" 
-    path="/components/todoitem" 
-    element={
-      <ComponentLayout>
-        <TodoItemHost />
-      </ComponentLayout>
-    } 
-  />,
-  <Route 
-    key="todosummary" 
-    path="/components/todosummary" 
-    element={
-      <ComponentLayout>
-        <TodoSummaryHost />
-      </ComponentLayout>
-    } 
-  />
+  ...componentRoutes
 ]; 
