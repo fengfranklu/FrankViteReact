@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import TodoItem from '../../components/TodoItem';
-import { Todo } from '../../types/todo';
+import TodoItem from '../components/TodoItem';
+import { Todo } from '../types/todo';
 
 export default function TodoItemHost() {
   const [todo, setTodo] = useState<Todo>({
@@ -37,4 +37,4 @@ export default function TodoItemHost() {
       </div>
     </div>
   );
-}
+} 

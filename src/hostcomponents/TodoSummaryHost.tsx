@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import TodoSummary from '../../components/TodoSummary';
-import { Todo } from '../../types/todo';
+import TodoSummary from '../components/TodoSummary';
+import { Todo } from '../types/todo';
 
 export default function TodoSummaryHost() {
   const [todos, setTodos] = useState<Todo[]>([
@@ -25,4 +25,4 @@ export default function TodoSummaryHost() {
       </div>
     </div>
   );
-}
+} 

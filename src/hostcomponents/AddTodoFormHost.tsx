@@ -1,4 +1,4 @@
-import AddTodoForm from '../../components/AddTodoForm';
+import AddTodoForm from '../components/AddTodoForm';
 
 export default function AddTodoFormHost() {
   const handleSubmit = (title: string) => {
@@ -14,4 +14,4 @@ export default function AddTodoFormHost() {
       </div>
     </div>
   );
-}
+} 

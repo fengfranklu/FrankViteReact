@@ -1,12 +1,13 @@
 import { ComponentType } from 'react';
-import AddTodoFormHost from '../hosts/AddTodoFormHost';
-import TodoItemHost from '../hosts/TodoItemHost';
-import TodoListHost from '../hosts/TodoListHost';
-import TodoSummaryHost from '../hosts/TodoSummaryHost';
-import SampleAddTodoFormHost from '../hosts/SampleAddTodoFormHost';
-import SampleTodoItemHost from '../hosts/SampleTodoItemHost';
-import SampleTodoListHost from '../hosts/SampleTodoListHost';
-import SampleTodoSummaryHost from '../hosts/SampleTodoSummaryHost';
+
+import AddTodoFormHost from '../../hostcomponents/AddTodoFormHost';
+import TodoItemHost from '../../hostcomponents/TodoItemHost';
+import TodoListHost from '../../hostcomponents/TodoListHost';
+import TodoSummaryHost from '../../hostcomponents/TodoSummaryHost';
+import SampleAddTodoFormHost from '../samplehosts/SampleAddTodoFormHost';
+import SampleTodoItemHost from '../samplehosts/SampleTodoItemHost';
+import SampleTodoListHost from '../samplehosts/SampleTodoListHost';
+import SampleTodoSummaryHost from '../samplehosts/SampleTodoSummaryHost';
 
 // Map of component IDs to their host components
 export const hostComponents: Record<string, ComponentType> = {
